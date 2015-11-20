@@ -7,10 +7,11 @@ public class Point {
 	private int x;
 	private int y;
 	private Color color = new Color(0, 0, 0, 255); // default is black
-
-	public Point() {
+	private BufferedImage outputImage  ; 
+	public Point(BufferedImage outputImage) {
 		this.x = 0;
 		this.y = 0;
+		this.outputImage = outputImage ; 
 	}
 
 	public Point(int x, int y) {
@@ -34,17 +35,14 @@ public class Point {
 	public void setY(int y) {
 		this.y = y;
 	}
-	public void setXY(int x , int y) { 
-		this.x = x ; 
-		this.y = y ; 
-	}
-	public void setColor(Color c) {
-		this.color = c;
+
+	public void setXY(int x, int y) {
+		this.x = x;
+		this.y = y;
 	}
 
-	public void drawPoint(BufferedImage outputImage) {
-		int k = color.getRGB();
-		outputImage.setRGB(x, y, k);
+	public void setColor(Color c) {
+		this.color = c;
 	}
 
 	public String getPointRGB(BufferedImage iImage) {
@@ -55,12 +53,25 @@ public class Point {
 		int b = (pixel) & 0xff;
 		return (r + " ; " + g + " ; " + b);
 	}
-	
+
+	public void drawPixel() {
+		try {
+			int k = color.getRGB();
+			outputImage.setRGB(x, y, k);
+		} catch (Exception e) {
+			//System.out.println("Error: " +x + " " +  y);
+		}
+
+	}
+
+	public static void putPixel(int x, int y, int color, BufferedImage outputImage) {
+
+		outputImage.setRGB(x, y, color);
+	}
 
 	@Override
 	public String toString() {
-		//return "Point in object OXY [x=" + (x+320) + ", y=" + (240 - y) + "]";
-		return "Point in OXY of device [x=" + x + ", y=" + y + "]";
+		return "Point in Math's axis [x=" + (x + MainFrame.width / 2) + ", y=" + (MainFrame.height / 2 - y) + "]";
 	}
 
 }
