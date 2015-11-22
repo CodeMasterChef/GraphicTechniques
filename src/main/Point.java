@@ -6,7 +6,7 @@ import java.awt.image.BufferedImage;
 public class Point {
 	private int x;
 	private int y;
-	private Color color = new Color(0, 0, 0, 255); // default is black
+	private Color color = MainFrame.drawColor ;  // default is black
 	private BufferedImage outputImage  ; 
 	public Point(BufferedImage outputImage) {
 		this.x = 0;
@@ -15,9 +15,19 @@ public class Point {
 	}
 
 	public Point(int x, int y) {
-
 		this.x = x;
 		this.y = y;
+	}
+	public Point() {
+		
+	}
+	
+
+	public Point(int x, int y, BufferedImage outputImage) {
+		super();
+		this.x = x;
+		this.y = y;
+		this.outputImage = outputImage;
 	}
 
 	public int getX() {
@@ -45,6 +55,14 @@ public class Point {
 		this.color = c;
 	}
 
+	public BufferedImage getOutputImage() {
+		return outputImage;
+	}
+
+	public void setOutputImage(BufferedImage outputImage) {
+		this.outputImage = outputImage;
+	}
+
 	public String getPointRGB(BufferedImage iImage) {
 		int pixel = iImage.getRGB(x, y);
 		// int alpha = (pixel >> 24) & 0xff;
@@ -63,15 +81,18 @@ public class Point {
 		}
 
 	}
-
-	public static void putPixel(int x, int y, int color, BufferedImage outputImage) {
-
-		outputImage.setRGB(x, y, color);
+	public int  getPixelColor() { 
+		return outputImage.getRGB(x, y);
 	}
+	
 
+	public static void putPixel(int x, int y, Color color, BufferedImage outputImage) {
+		outputImage.setRGB(x, y, color.getRGB());
+	}
+	
 	@Override
 	public String toString() {
-		return "Point in Math's axis [x=" + (x + MainFrame.width / 2) + ", y=" + (MainFrame.height / 2 - y) + "]";
+		return "Point in Math's axis [x=" + (x - MainFrame.width / 2) + ", y=" + ( MainFrame.height / 2  - y) + "]";
 	}
 
 }

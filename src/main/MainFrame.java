@@ -10,10 +10,15 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -34,13 +39,13 @@ public class MainFrame {
 	public static int width = 641;
 	public static int height = 481;
 	public BufferedImage outputImage = new BufferedImage(width, height, Image.SCALE_DEFAULT);
-	private String choosenOption = "line"; // 0 = line , 1 = circle , 2 =
-											// ellipse , 3 = polygon
+	private String choosenOption = "line"; // line , circle , ellipse , polygon
+											// , fillcolor
 	JLabel mainLabel = new JLabel("");
-	private JTextField txtXValueInSourcePointInLineClass;
-	private JTextField txtYValueInSourcePointInLineClass;
-	private JTextField txtXValueInDestinationPointInLineClass;
-	private JTextField txtYValueInDestinationPointInLineClass;
+	private JTextField txtXLineOfSourcePoint;
+	private JTextField txtYLineOfSourcePoint;
+	private JTextField txtXLineOfDestinationPoint;
+	private JTextField txtYLineOfDestionationPoint;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	private JPanel mainPanel;
 	private JTextField txtCircleXValue;
@@ -53,29 +58,50 @@ public class MainFrame {
 	private JTextField txtEllipseBValue;
 	private final ButtonGroup buttonGroup_2 = new ButtonGroup();
 
-	
-	
+	public static Color lineColor = new Color(179, 237, 252);
+	public static Color axisColor = new Color(104, 104, 104);
+	public static Color drawColor = new Color(0, 0, 0);
+
+	private Polygon polygon;
+	private Line line;
+
+	private JRadioButton radioLineDDAAlgorithm;
+	private JRadioButton radioLineBresenhamAlgorithm;
+	private JRadioButton radioLineMidPointAlgorithm;
+	private JRadioButton radioCircleWithBresenham;
+	private JRadioButton radioCircleMidPoint;
+	private JRadioButton radioEsclipseBresenham ; 
+	private JRadioButton radioEllipseMidPoint;
+	private JRadioButton radioFillColorRed;
+	private JRadioButton radioFillColorGreen;
+	private JRadioButton radioFillColorBlue;
 	/**
 	 * Launch the application.
 	 */
-	private int changeX(int x) {
+	private int changeXFromRealToDevice(int x) {
 		return x + width / 2;
 	}
 
-	private int changeY(int y) {
+	private int changeYFromRealToDevice(int y) {
 		return height / 2 - y;
 	}
 
-	Polygon polygon;
+	private int changeXFromDeviceToReal(int x) {
+		return x - width / 2;
+	}
 
-	private void loadImageToLabel() {
+	private int changeYFromDeviceToReal(int y) {
+		return height / 2 - y;
+	}
+
+	private final ButtonGroup buttonGroup_Color = new ButtonGroup();
+
+	public void loadImageToLabel() {
 		Image image = outputImage.getScaledInstance(outputImage.getWidth(), outputImage.getHeight(),
 				Image.SCALE_SMOOTH);
 		ImageIcon imageIcon = new ImageIcon(image);
 		mainLabel.setIcon(imageIcon);
 	}
-	
-	
 
 	public static void main(String[] args) {
 		// load 'look and feel' packet
@@ -98,8 +124,6 @@ public class MainFrame {
 		});
 	}
 
-	
-
 	/**
 	 * Create the application.
 	 */
@@ -110,8 +134,6 @@ public class MainFrame {
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	
-	
 
 	private void initialize() {
 		frame = new JFrame();
@@ -134,44 +156,32 @@ public class MainFrame {
 		mainLabel.setForeground(Color.WHITE);
 		mainLabel.setBackground(Color.WHITE);
 		mainLabel.setBounds(0, 0, 641, 481);
-		mainLabel.addMouseListener( new MouseAdapter() {
+
+		mainLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				// TODO Auto-generated method stub
 				super.mouseClicked(e);
-				if(choosenOption.equals("polygon")) {
-					// left click with mouse 
-					if(e.getButton() == MouseEvent.BUTTON1) { 
-						if (polygon == null) {
-							// draw first point
-							Point startPoint = new Point(outputImage);
-							startPoint.setXY(e.getX(), e.getY());
-							Circle circle  = new Circle(startPoint, 1, outputImage) ; 
-							circle.bresenhamAlgorithm();
-							loadImageToLabel();
-							// Initialize polygon object
-							polygon = new Polygon(startPoint, outputImage);
-						
-						}else {
-							Point detinationPoint = new Point(outputImage);
-							detinationPoint.setXY(e.getX(), e.getY());
-							polygon.drawDestinationPoint(detinationPoint);
-							loadImageToLabel();
-						}
-					} else if( e.getButton() == MouseEvent.BUTTON3) {  // right click with mouse
-						if(polygon!=null) { 
-							polygon.endDrawing();
-							loadImageToLabel();
-							polygon = null ; 
-						}
-					}
-					
+				int x = e.getX() ; 
+				int y = e.getY() ; 
+				if (choosenOption.equals("line")) {
+					callLine(e);
 				}
+				else if (choosenOption.equals("circle")) {
+					callCircle(x, y);
+				} 
+				else if(choosenOption.equals("ellipse")) {
+					callEllipseClass(x, y);
+				}
+				else if (choosenOption.equals("polygon")) {
 				
+					callPolygonClass(e);
+				} else if (choosenOption.equals("fillcolor")) {
+					callFillColorClass(e.getX(), e.getY());
+				}
+
 			}
 		});
 		mainPanel.add(mainLabel);
-		
 
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.setBounds(0, 20, 990, 130);
@@ -180,14 +190,16 @@ public class MainFrame {
 		JPanel panel = new JPanel();
 		panel.addAncestorListener(new AncestorListener() {
 			public void ancestorAdded(AncestorEvent arg0) {
-				choosenOption = "line" ; 
+				choosenOption = "line";
 			}
+
 			public void ancestorMoved(AncestorEvent arg0) {
 			}
+
 			public void ancestorRemoved(AncestorEvent arg0) {
 			}
 		});
-		
+
 		tabbedPane.addTab("Line", null, panel, null);
 		panel.setLayout(null);
 
@@ -200,43 +212,43 @@ public class MainFrame {
 		lblX.setBounds(20, 36, 20, 14);
 		panel.add(lblX);
 
-		txtXValueInSourcePointInLineClass = new JTextField();
-		txtXValueInSourcePointInLineClass.setText("0");
-		txtXValueInSourcePointInLineClass.setBounds(45, 36, 86, 20);
-		panel.add(txtXValueInSourcePointInLineClass);
-		txtXValueInSourcePointInLineClass.setColumns(10);
+		txtXLineOfSourcePoint = new JTextField();
+		txtXLineOfSourcePoint.setText("0");
+		txtXLineOfSourcePoint.setBounds(45, 36, 86, 20);
+		panel.add(txtXLineOfSourcePoint);
+		txtXLineOfSourcePoint.setColumns(10);
 
 		JLabel lblY = new JLabel("y:");
 		lblY.setBounds(20, 74, 20, 14);
 		panel.add(lblY);
 
-		txtYValueInSourcePointInLineClass = new JTextField();
-		txtYValueInSourcePointInLineClass.setText("0");
-		txtYValueInSourcePointInLineClass.setColumns(10);
-		txtYValueInSourcePointInLineClass.setBounds(45, 71, 86, 20);
-		panel.add(txtYValueInSourcePointInLineClass);
+		txtYLineOfSourcePoint = new JTextField();
+		txtYLineOfSourcePoint.setText("0");
+		txtYLineOfSourcePoint.setColumns(10);
+		txtYLineOfSourcePoint.setBounds(45, 71, 86, 20);
+		panel.add(txtYLineOfSourcePoint);
 
 		JLabel lblDestinationPoint = new JLabel("Destination Point:");
 		lblDestinationPoint.setFont(new Font("Tahoma", Font.PLAIN, 14));
 		lblDestinationPoint.setBounds(155, 11, 111, 14);
 		panel.add(lblDestinationPoint);
 
-		txtXValueInDestinationPointInLineClass = new JTextField();
+		txtXLineOfDestinationPoint = new JTextField();
 
-		txtXValueInDestinationPointInLineClass.setText("100");
-		txtXValueInDestinationPointInLineClass.setColumns(10);
-		txtXValueInDestinationPointInLineClass.setBounds(190, 36, 86, 20);
-		panel.add(txtXValueInDestinationPointInLineClass);
+		txtXLineOfDestinationPoint.setText("100");
+		txtXLineOfDestinationPoint.setColumns(10);
+		txtXLineOfDestinationPoint.setBounds(190, 36, 86, 20);
+		panel.add(txtXLineOfDestinationPoint);
 
 		JLabel label = new JLabel("x:");
 		label.setBounds(165, 36, 20, 14);
 		panel.add(label);
 
-		txtYValueInDestinationPointInLineClass = new JTextField();
-		txtYValueInDestinationPointInLineClass.setText("150");
-		txtYValueInDestinationPointInLineClass.setColumns(10);
-		txtYValueInDestinationPointInLineClass.setBounds(190, 71, 86, 20);
-		panel.add(txtYValueInDestinationPointInLineClass);
+		txtYLineOfDestionationPoint = new JTextField();
+		txtYLineOfDestionationPoint.setText("150");
+		txtYLineOfDestionationPoint.setColumns(10);
+		txtYLineOfDestionationPoint.setBounds(190, 71, 86, 20);
+		panel.add(txtYLineOfDestionationPoint);
 
 		JLabel label_1 = new JLabel("y:");
 		label_1.setBounds(165, 74, 20, 14);
@@ -247,29 +259,30 @@ public class MainFrame {
 		lblType.setBounds(304, 8, 45, 20);
 		panel.add(lblType);
 
-		final JRadioButton radioButtonDDAAlgorithmInLineClass = new JRadioButton("DDA");
-		buttonGroup_1.add(radioButtonDDAAlgorithmInLineClass);
-		radioButtonDDAAlgorithmInLineClass.setSelected(true);
-		radioButtonDDAAlgorithmInLineClass.setBounds(314, 32, 47, 23);
-		panel.add(radioButtonDDAAlgorithmInLineClass);
+		radioLineDDAAlgorithm = new JRadioButton("DDA");
+		buttonGroup_1.add(radioLineDDAAlgorithm);
+		radioLineDDAAlgorithm.setSelected(true);
+		radioLineDDAAlgorithm.setBounds(314, 32, 47, 23);
+		panel.add(radioLineDDAAlgorithm);
 
-		final JRadioButton radioButtonBresenhamAlgorithmInLineClass = new JRadioButton("Bresenham");
-		buttonGroup_1.add(radioButtonBresenhamAlgorithmInLineClass);
-		radioButtonBresenhamAlgorithmInLineClass.setBounds(377, 32, 86, 23);
-		panel.add(radioButtonBresenhamAlgorithmInLineClass);
+		radioLineBresenhamAlgorithm = new JRadioButton("Bresenham");
+		buttonGroup_1.add(radioLineBresenhamAlgorithm);
+		radioLineBresenhamAlgorithm.setBounds(377, 32, 86, 23);
+		panel.add(radioLineBresenhamAlgorithm);
 
-		final JRadioButton radioButtonMidPointAlgorithmInLineClass = new JRadioButton("Mid Point");
-		buttonGroup_1.add(radioButtonMidPointAlgorithmInLineClass);
-		radioButtonMidPointAlgorithmInLineClass.setBounds(476, 32, 69, 23);
-		panel.add(radioButtonMidPointAlgorithmInLineClass);
+		radioLineMidPointAlgorithm = new JRadioButton("Mid Point");
+		buttonGroup_1.add(radioLineMidPointAlgorithm);
+		radioLineMidPointAlgorithm.setBounds(476, 32, 69, 23);
+		panel.add(radioLineMidPointAlgorithm);
 
 		JButton btnDrawLine = new JButton("Apply");
+		btnDrawLine.setFont(new Font("Arial", Font.PLAIN, 16));
 		btnDrawLine.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				int x_1 = Integer.parseInt(txtXValueInSourcePointInLineClass.getText());
-				int y_1 = Integer.parseInt(txtYValueInSourcePointInLineClass.getText());
-				int x_2 = Integer.parseInt(txtXValueInDestinationPointInLineClass.getText());
-				int y_2 = Integer.parseInt(txtYValueInDestinationPointInLineClass.getText());
+				int x_1 = Integer.parseInt(txtXLineOfSourcePoint.getText());
+				int y_1 = Integer.parseInt(txtYLineOfSourcePoint.getText());
+				int x_2 = Integer.parseInt(txtXLineOfDestinationPoint.getText());
+				int y_2 = Integer.parseInt(txtYLineOfDestionationPoint.getText());
 				if (isInvalidXValue(x_1) || isInvalidXValue(x_2)) {
 					JOptionPane.showMessageDialog(null, "X value is in range [-320,320] !", "ERROR",
 							JOptionPane.WARNING_MESSAGE);
@@ -280,33 +293,35 @@ public class MainFrame {
 					return;
 				}
 
-				Point sourcePoint = new Point(changeX(x_1), changeY(y_1));
-				Point destinationPoint = new Point(changeX(x_2), changeY(y_2));
+				Point sourcePoint = new Point(changeXFromRealToDevice(x_1), changeYFromRealToDevice(y_1));
+				Point destinationPoint = new Point(changeXFromRealToDevice(x_2), changeYFromRealToDevice(y_2));
 
 				Line line = new Line(sourcePoint, destinationPoint, outputImage);
 
-				if (radioButtonDDAAlgorithmInLineClass.isSelected()) {
+				if (radioLineDDAAlgorithm.isSelected()) {
 					line.DDAAlgorithm();
 					loadImageToLabel();
-				} else if (radioButtonBresenhamAlgorithmInLineClass.isSelected()) {
+				} else if (radioLineBresenhamAlgorithm.isSelected()) {
 					line.bresenham();
 					loadImageToLabel();
-				} else if (radioButtonMidPointAlgorithmInLineClass.isSelected()) {
+				} else if (radioLineMidPointAlgorithm.isSelected()) {
 					line.midPointAlgorithm();
 					loadImageToLabel();
 				}
 			}
 		});
-		btnDrawLine.setBounds(614, 32, 103, 42);
+		btnDrawLine.setBounds(600, 10, 80, 80);
 		panel.add(btnDrawLine);
 
 		JPanel panel_1 = new JPanel();
 		panel_1.addAncestorListener(new AncestorListener() {
 			public void ancestorAdded(AncestorEvent event) {
-				choosenOption.equals("circle") ; 
+				choosenOption = "circle";
 			}
+
 			public void ancestorMoved(AncestorEvent event) {
 			}
+
 			public void ancestorRemoved(AncestorEvent event) {
 			}
 		});
@@ -340,18 +355,19 @@ public class MainFrame {
 		panel_1.add(txtCircleYValue);
 		txtCircleYValue.setColumns(10);
 
-		final JRadioButton radioCircleWithBresenham = new JRadioButton("Bresenham");
+		radioCircleWithBresenham = new JRadioButton("Bresenham");
 		buttonGroup.add(radioCircleWithBresenham);
 		radioCircleWithBresenham.setSelected(true);
 		radioCircleWithBresenham.setBounds(270, 46, 86, 23);
 		panel_1.add(radioCircleWithBresenham);
 
-		final JRadioButton radioCircleMidPoint = new JRadioButton("Mid Point");
+		radioCircleMidPoint = new JRadioButton("Mid Point");
 		buttonGroup.add(radioCircleMidPoint);
 		radioCircleMidPoint.setBounds(370, 46, 86, 23);
 		panel_1.add(radioCircleMidPoint);
 
 		JButton btnCircleApply = new JButton("Apply");
+		btnCircleApply.setFont(new Font("Arial", Font.PLAIN, 16));
 		btnCircleApply.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 
@@ -369,7 +385,7 @@ public class MainFrame {
 				}
 				int radius = Integer.parseInt(txtCircleRadius.getText());
 
-				Point centralPoint = new Point(changeX(x0), changeY(y0));
+				Point centralPoint = new Point(changeXFromRealToDevice(x0), changeYFromRealToDevice(y0));
 
 				Circle circle = new Circle(centralPoint, radius, outputImage);
 
@@ -383,7 +399,7 @@ public class MainFrame {
 			}
 
 		});
-		btnCircleApply.setBounds(499, 20, 89, 70);
+		btnCircleApply.setBounds(600, 10, 80, 80);
 		panel_1.add(btnCircleApply);
 
 		JLabel lblType_1 = new JLabel("Type:");
@@ -397,7 +413,7 @@ public class MainFrame {
 		panel_1.add(lblRadius);
 
 		txtCircleRadius = new JTextField();
-		txtCircleRadius.setText("100");
+		txtCircleRadius.setText("20");
 		txtCircleRadius.setColumns(10);
 		txtCircleRadius.setBounds(149, 45, 86, 20);
 		panel_1.add(txtCircleRadius);
@@ -405,10 +421,12 @@ public class MainFrame {
 		JPanel panel_2 = new JPanel();
 		panel_2.addAncestorListener(new AncestorListener() {
 			public void ancestorAdded(AncestorEvent event) {
-				choosenOption = "ellipse" ; 
+				choosenOption = "ellipse";
 			}
+
 			public void ancestorMoved(AncestorEvent event) {
 			}
+
 			public void ancestorRemoved(AncestorEvent event) {
 			}
 		});
@@ -474,18 +492,19 @@ public class MainFrame {
 		label_5.setBounds(309, 11, 111, 24);
 		panel_2.add(label_5);
 
-		final JRadioButton radioEsclipseBresenham = new JRadioButton("Bresenham");
+		radioEsclipseBresenham = new JRadioButton("Bresenham");
 		buttonGroup_2.add(radioEsclipseBresenham);
 		radioEsclipseBresenham.setSelected(true);
 		radioEsclipseBresenham.setBounds(331, 41, 86, 23);
 		panel_2.add(radioEsclipseBresenham);
 
-		final JRadioButton radioEllipseMidPoint = new JRadioButton("Mid Point");
+		radioEllipseMidPoint = new JRadioButton("Mid Point");
 		buttonGroup_2.add(radioEllipseMidPoint);
 		radioEllipseMidPoint.setBounds(431, 41, 86, 23);
 		panel_2.add(radioEllipseMidPoint);
 
 		JButton btnEllipseApply = new JButton("Apply");
+		btnEllipseApply.setFont(new Font("Arial", Font.PLAIN, 16));
 		btnEllipseApply.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				int x0 = Integer.parseInt(txtEllipseXValue.getText());
@@ -503,7 +522,7 @@ public class MainFrame {
 				int a = Integer.parseInt(txtEllipseAValue.getText());
 				int b = Integer.parseInt(txtEllipseBValue.getText());
 
-				Point centralPoint = new Point(changeX(x0), changeY(y0));
+				Point centralPoint = new Point(changeXFromRealToDevice(x0), changeYFromRealToDevice(y0));
 
 				Ellipse ellipse = new Ellipse(centralPoint, a, b, outputImage);
 
@@ -516,7 +535,7 @@ public class MainFrame {
 				}
 			}
 		});
-		btnEllipseApply.setBounds(533, 11, 89, 76);
+		btnEllipseApply.setBounds(600, 10, 80, 80);
 		panel_2.add(btnEllipseApply);
 
 		JPanel panel_3 = new JPanel();
@@ -534,16 +553,75 @@ public class MainFrame {
 		});
 		tabbedPane.addTab("Polygon", null, panel_3, null);
 		panel_3.setLayout(null);
-		
+
 		JLabel lblClickChutTri = new JLabel("* Press left mouse button to  start drawing.");
 		lblClickChutTri.setFont(new Font("Tahoma", Font.PLAIN, 14));
 		lblClickChutTri.setBounds(10, 11, 266, 28);
 		panel_3.add(lblClickChutTri);
-		
+
 		JLabel lblPressRight = new JLabel("* Press right mouse button to finish drawing.");
 		lblPressRight.setFont(new Font("Tahoma", Font.PLAIN, 14));
 		lblPressRight.setBounds(10, 49, 311, 28);
 		panel_3.add(lblPressRight);
+
+		JPanel panel_4 = new JPanel();
+		panel_4.addAncestorListener(new AncestorListener() {
+			public void ancestorAdded(AncestorEvent arg0) {
+				choosenOption = "fillcolor";
+			}
+
+			public void ancestorMoved(AncestorEvent arg0) {
+			}
+
+			public void ancestorRemoved(AncestorEvent arg0) {
+			}
+		});
+		tabbedPane.addTab("Fill Color", null, panel_4, null);
+		panel_4.setLayout(null);
+
+		JLabel lblPressLeft = new JLabel("* Press left mouse button to fill color.");
+		lblPressLeft.setFont(new Font("Tahoma", Font.PLAIN, 14));
+		lblPressLeft.setBounds(10, 11, 266, 28);
+		panel_4.add(lblPressLeft);
+
+		JLabel lblColor = new JLabel("Color:");
+		lblColor.setFont(new Font("Tahoma", Font.PLAIN, 14));
+		lblColor.setBounds(20, 38, 43, 28);
+		panel_4.add(lblColor);
+
+		radioFillColorRed = new JRadioButton("");
+		buttonGroup_Color.add(radioFillColorRed);
+		radioFillColorRed.setSelected(true);
+		radioFillColorRed.setBounds(70, 43, 20, 23);
+		panel_4.add(radioFillColorRed);
+
+		radioFillColorGreen = new JRadioButton("");
+		buttonGroup_Color.add(radioFillColorGreen);
+		radioFillColorGreen.setBounds(120, 43, 20, 23);
+		panel_4.add(radioFillColorGreen);
+
+		radioFillColorBlue = new JRadioButton("");
+		buttonGroup_Color.add(radioFillColorBlue);
+		radioFillColorBlue.setBounds(170, 43, 20, 23);
+		panel_4.add(radioFillColorBlue);
+		
+		JLabel lblRedColor = new JLabel("");
+		lblRedColor.setIcon(new ImageIcon("src\\main\\color-icon\\red.jpg"));
+		lblRedColor.setBounds(90, 45, 20, 20);
+		lblRedColor.setBorder(BorderFactory.createLineBorder(Color.red));
+		panel_4.add(lblRedColor);
+		
+		JLabel lblGreenColor = new JLabel("");
+		lblGreenColor.setIcon(new ImageIcon("src\\main\\color-icon\\green.jpg"));
+		lblGreenColor.setBounds(140, 45, 20, 20);
+		lblGreenColor.setBorder(BorderFactory.createLineBorder(Color.green));
+		panel_4.add(lblGreenColor);
+		
+		JLabel lblBlueColor = new JLabel("");
+		lblBlueColor.setIcon(new ImageIcon("src\\main\\color-icon\\blue.jpg"));
+		lblBlueColor.setBounds(190, 45, 20, 20);
+		lblBlueColor.setBorder(BorderFactory.createLineBorder(Color.blue));
+		panel_4.add(lblBlueColor);
 
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.setBounds(0, 0, 980, 21);
@@ -561,10 +639,32 @@ public class MainFrame {
 		mnFile.add(mntmNew);
 
 		JMenuItem mntmSave = new JMenuItem("Save");
+		mntmSave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				JFileChooser save = new JFileChooser();
+				save.setFileFilter(new ImageTypeFilter());
+				save.setDialogTitle("Lưu ảnh");
+
+				int result = save.showSaveDialog(null);
+				if (result == JFileChooser.APPROVE_OPTION) {
+					File file = save.getSelectedFile();
+
+					String fileName = file.getName();
+					// nếu không có phần mở rộng thì thêm vào đuôi png
+					if (!(fileName.endsWith(".jpg") || fileName.endsWith(".png") || fileName.endsWith(".bmp"))) {
+						file = new File(file.getAbsolutePath() + ".png");
+					}
+					try {
+						ImageIO.write(outputImage, "png", file);
+					} catch (IOException ex) {
+						System.out.println("ERROR: " + ex.getMessage());
+					}
+				}
+			}
+		});
 		mnFile.add(mntmSave);
 	}
-	
-	
+
 	/*
 	 * My code here!
 	 * 
@@ -590,31 +690,149 @@ public class MainFrame {
 		graphic2d.setColor(Color.WHITE);
 		graphic2d.fillRect(0, 0, width, height);
 		Point point = new Point(outputImage);
-		for (int i = 0; i < height; i += 2) { // i+=2 to create dot line (.....)
-			point.setXY(width / 2, i);
-			point.drawPixel();
-			// draw milestones 10, 20, ...
-			if (i % 10 == 0) {
-				for (int k = -2; k <= 2; k++) {
-					point.setXY(width / 2 - k, i);
+		// draw line every 10 px
+		point.setColor(lineColor);
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				if (i % 10 == 0 || j % 10 == 0) {
+					point.setXY(i, j);
 					point.drawPixel();
+				}
+				// vẽ đường biên
+				if (i == 0 || j == 0 || i == width - 1 || j == height - 1) {
+					point.setColor(drawColor);
+					point.setXY(i, j);
+					point.drawPixel();
+					point.setColor(lineColor);
 				}
 			}
 		}
-		for (int j = 0; j < width; j += 2) {
+		// draw axis Oxy
+		point.setColor(axisColor);
+		for (int i = 0; i < height; i++) {
+			point.setXY(width / 2, i);
+			point.drawPixel();
+		}
+		for (int j = 0; j < width; j++) {
 			point.setXY(j, height / 2);
 			point.drawPixel();
-			// draw milestones 10, 20, ...
-			if (j % 10 == 0) {
-				for (int k = -2; k <= 2; k++) {
-					point.setXY(j, height / 2 - k);
-					point.drawPixel();
-				}
-			}
-
 		}
 		loadImageToLabel();
 
 	}
-	
+
+	Point sourcePointOfLine;
+
+	private void callLine(MouseEvent e) {
+		Point destinationPoint;
+		if (line == null) {
+			// draw first point with a special circle
+			sourcePointOfLine = new Point(e.getX(), e.getY());
+			Circle circle = new Circle(sourcePointOfLine, 1, outputImage);
+			circle.bresenhamAlgorithm();
+			loadImageToLabel();
+			// Initialize Line object
+			line = new Line(outputImage);
+
+		} else {
+			destinationPoint = new Point(e.getX(), e.getY());
+			line.setSourcePoint(sourcePointOfLine);
+			line.setDestinationPoint(destinationPoint);
+			if (radioLineDDAAlgorithm.isSelected()) {
+				line.DDAAlgorithm();
+			} else if (radioLineBresenhamAlgorithm.isSelected()) {
+				line.bresenham();
+			} else if (radioLineMidPointAlgorithm.isSelected()) {
+				line.midPointAlgorithm();
+			}
+			// set text field is same of e.getX , e.getY
+			txtXLineOfSourcePoint.setText(String.valueOf(changeXFromDeviceToReal(sourcePointOfLine.getX())));
+			txtYLineOfSourcePoint.setText(String.valueOf(changeYFromDeviceToReal(sourcePointOfLine.getY())));
+			txtXLineOfDestinationPoint.setText(String.valueOf(changeXFromDeviceToReal(destinationPoint.getX())));
+			txtYLineOfDestionationPoint.setText(String.valueOf(changeYFromDeviceToReal(destinationPoint.getY())));
+			loadImageToLabel();
+			line = null;
+
+		}
+	}
+
+	private void callCircle(int x, int y) {
+		Point centralPoint = new Point(x, y, outputImage);
+		int radius = Integer.parseInt(txtCircleRadius.getText());
+		Circle circle = new Circle(centralPoint, radius, outputImage);
+
+		if (radioCircleWithBresenham.isSelected()) {
+			circle.bresenhamAlgorithm();
+			loadImageToLabel();
+		} else if (radioCircleMidPoint.isSelected()) {
+			circle.midPointAlgorithm();
+			loadImageToLabel();
+		}
+		txtCircleXValue.setText(String.valueOf( changeXFromDeviceToReal(x)));
+		txtCircleYValue.setText(String.valueOf( changeYFromDeviceToReal(y)));
+
+	}
+	private void callEllipseClass(int x, int y) {
+		Point centralPoint = new Point(x, y, outputImage);
+		int a = Integer.parseInt(txtEllipseAValue.getText());
+		int b = Integer.parseInt(txtEllipseBValue.getText());
+		Ellipse ellipse = new Ellipse(centralPoint, a,b, outputImage);
+
+		if (radioEsclipseBresenham.isSelected()) {
+			ellipse.bresenham();
+			loadImageToLabel();
+		} else if (radioEllipseMidPoint.isSelected()) {
+			ellipse.midPointAlgorithm();
+			loadImageToLabel();
+		}
+		txtEllipseXValue.setText(String.valueOf( changeXFromDeviceToReal(x)));
+		txtEllipseYValue.setText(String.valueOf( changeYFromDeviceToReal(y)));
+	}
+	private void callPolygonClass(MouseEvent e) {
+		// left click with mouse
+		if (e.getButton() == MouseEvent.BUTTON1) {
+			if (polygon == null) {
+				// draw first point
+				Point startPoint = new Point(outputImage);
+				startPoint.setXY(e.getX(), e.getY());
+				Circle circle = new Circle(startPoint, 1, outputImage);
+				circle.bresenhamAlgorithm();
+				loadImageToLabel();
+				// Initialize polygon object
+				polygon = new Polygon(startPoint, outputImage);
+
+			} else {
+				Point detinationPoint = new Point(outputImage);
+				detinationPoint.setXY(e.getX(), e.getY());
+				polygon.drawDestinationPoint(detinationPoint);
+				loadImageToLabel();
+			}
+		} else if (e.getButton() == MouseEvent.BUTTON3) {
+			// right click mouse button event
+			if (polygon != null) {
+				polygon.endDrawing();
+				loadImageToLabel();
+				polygon = null;
+			}
+		}
+
+	}
+
+	private void callFillColorClass(int x, int y) {
+		Point startPoint = new Point(x, y);
+		Color color = new Color(255, 0, 0);
+		if (radioFillColorRed.isSelected()) {
+			color = new Color(255, 0, 0);
+		}
+		else if (radioFillColorGreen.isSelected()) {
+			color = new Color(0, 255, 0);
+		}
+		else if (radioFillColorBlue.isSelected()) {
+			color = new Color(0, 0, 255);
+		}
+		FillColor fillColor = new FillColor(startPoint, outputImage, color);
+		fillColor.oilSpillWithStack();
+		loadImageToLabel();
+
+	}
 }

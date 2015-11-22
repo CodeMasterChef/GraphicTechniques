@@ -7,12 +7,33 @@ public class Line {
 	Point destinationPoint;
 	BufferedImage outputImage;
 
+	public Line (BufferedImage outputImage) {
+		this.outputImage = outputImage ; 
+	}
 	public Line(Point source, Point destination, BufferedImage output) {
 		sourcePoint = source;
 		destinationPoint = destination;
 		outputImage = output;
 	}
 
+	public Point getSourcePoint() {
+		return sourcePoint;
+	}
+	public void setSourcePoint(Point sourcePoint) {
+		this.sourcePoint = sourcePoint;
+	}
+	public Point getDestinationPoint() {
+		return destinationPoint;
+	}
+	public void setDestinationPoint(Point destinationPoint) {
+		this.destinationPoint = destinationPoint;
+	}
+	public BufferedImage getOutputImage() {
+		return outputImage;
+	}
+	public void setOutputImage(BufferedImage outputImage) {
+		this.outputImage = outputImage;
+	}
 	public void DDAAlgorithm() {
 
 		int x_1 = sourcePoint.getX();
@@ -42,7 +63,7 @@ public class Line {
 
 	}
 
-	public void bresenham() {
+	public void bresenhamAlgorithm() {
 		int dx = Math.abs(destinationPoint.getX() - sourcePoint.getX());
 		int dy = Math.abs(destinationPoint.getY() - sourcePoint.getY());
 		int x1 = sourcePoint.getX();
@@ -90,7 +111,7 @@ public class Line {
 			int x = x1;
 			int y = y1;
 			// hoán đổi 2 điểm nếu điểm sau có hoành độ lớn hơn
-			if (y > y2) {
+			if (y1 > y2) {
 				x = x2;
 				y = y2;
 				x2 = x1;
