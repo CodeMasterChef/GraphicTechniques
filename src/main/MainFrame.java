@@ -75,6 +75,7 @@ public class MainFrame {
 	private JRadioButton radioFillColorRed;
 	private JRadioButton radioFillColorGreen;
 	private JRadioButton radioFillColorBlue;
+	private JRadioButton radioFillColorWhite ; 
 	/**
 	 * Launch the application.
 	 */
@@ -302,7 +303,7 @@ public class MainFrame {
 					line.DDAAlgorithm();
 					loadImageToLabel();
 				} else if (radioLineBresenhamAlgorithm.isSelected()) {
-					line.bresenham();
+					line.bresenhamAlgorithm();
 					loadImageToLabel();
 				} else if (radioLineMidPointAlgorithm.isSelected()) {
 					line.midPointAlgorithm();
@@ -622,6 +623,17 @@ public class MainFrame {
 		lblBlueColor.setBounds(190, 45, 20, 20);
 		lblBlueColor.setBorder(BorderFactory.createLineBorder(Color.blue));
 		panel_4.add(lblBlueColor);
+		
+		radioFillColorWhite = new JRadioButton("");
+		buttonGroup_Color.add(radioFillColorWhite);
+		radioFillColorWhite.setBounds(220, 43, 20, 23);
+		panel_4.add(radioFillColorWhite);
+		
+		JLabel lblWhiteColor = new JLabel("");
+		lblWhiteColor.setBorder(BorderFactory.createLineBorder(Color.WHITE));
+		lblWhiteColor.setIcon(new ImageIcon("src\\main\\color-icon\\white.jpg"));
+		lblWhiteColor.setBounds(240, 45, 20, 20);
+		panel_4.add(lblWhiteColor);
 
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.setBounds(0, 0, 980, 21);
@@ -687,7 +699,7 @@ public class MainFrame {
 
 	public void createNewImage() {
 		Graphics2D graphic2d = outputImage.createGraphics();
-		graphic2d.setColor(Color.WHITE);
+		graphic2d.setColor(new Color(255, 255, 250));
 		graphic2d.fillRect(0, 0, width, height);
 		Point point = new Point(outputImage);
 		// draw line every 10 px
@@ -741,7 +753,7 @@ public class MainFrame {
 			if (radioLineDDAAlgorithm.isSelected()) {
 				line.DDAAlgorithm();
 			} else if (radioLineBresenhamAlgorithm.isSelected()) {
-				line.bresenham();
+				line.bresenhamAlgorithm();
 			} else if (radioLineMidPointAlgorithm.isSelected()) {
 				line.midPointAlgorithm();
 			}
@@ -829,6 +841,8 @@ public class MainFrame {
 		}
 		else if (radioFillColorBlue.isSelected()) {
 			color = new Color(0, 0, 255);
+		}else if( radioFillColorWhite.isSelected() ) {
+			color = new Color(255, 255, 255);
 		}
 		FillColor fillColor = new FillColor(startPoint, outputImage, color);
 		fillColor.oilSpillWithStack();

@@ -33,7 +33,7 @@ public class Polygon {
 	} 
 	public void drawDestinationPoint(Point destinationPoint) { 
 		Line line = new Line(middlePoint, destinationPoint, outputImage) ; 
-		line.bresenham(); 
+		line.bresenhamAlgorithm(); 
 		setMiddlePoint(destinationPoint);
 	}
 	public void endDrawing() { 

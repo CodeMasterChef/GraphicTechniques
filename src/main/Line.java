@@ -7,9 +7,10 @@ public class Line {
 	Point destinationPoint;
 	BufferedImage outputImage;
 
-	public Line (BufferedImage outputImage) {
-		this.outputImage = outputImage ; 
+	public Line(BufferedImage outputImage) {
+		this.outputImage = outputImage;
 	}
+
 	public Line(Point source, Point destination, BufferedImage output) {
 		sourcePoint = source;
 		destinationPoint = destination;
@@ -19,21 +20,27 @@ public class Line {
 	public Point getSourcePoint() {
 		return sourcePoint;
 	}
+
 	public void setSourcePoint(Point sourcePoint) {
 		this.sourcePoint = sourcePoint;
 	}
+
 	public Point getDestinationPoint() {
 		return destinationPoint;
 	}
+
 	public void setDestinationPoint(Point destinationPoint) {
 		this.destinationPoint = destinationPoint;
 	}
+
 	public BufferedImage getOutputImage() {
 		return outputImage;
 	}
+
 	public void setOutputImage(BufferedImage outputImage) {
 		this.outputImage = outputImage;
 	}
+
 	public void DDAAlgorithm() {
 
 		int x_1 = sourcePoint.getX();
@@ -63,6 +70,39 @@ public class Line {
 
 	}
 
+	private void bresenham(int x_source, int y_source, int x_destination, int y_destination, int option) {
+		int dy = Math.abs(y_destination - y_source);
+		int dx = Math.abs(x_destination - x_source);
+		int p = 2 * dy - dx;
+		int c1 = 2 * dy;
+		int c2 = 2 * (dy - dx);
+
+		Point point = new Point(outputImage);
+		if (option == 0) {
+			point.setXY(x_source, y_source);
+		} else {
+			point.setXY(y_source, x_source);
+		}
+
+		point.drawPixel();
+		while (x_source <= x_destination) {
+			x_source++;
+			if (p < 0)
+				p += c1;
+			else {
+				p += c2;
+				y_source  =  (y_source < y_destination) ? (y_source+1) : (y_source - 1) ; 
+			}
+			if (option == 0) {
+				point.setXY(x_source, y_source);
+			} else {
+				point.setXY(y_source, x_source);
+			}
+			point.drawPixel();
+		}
+
+	}
+
 	public void bresenhamAlgorithm() {
 		int dx = Math.abs(destinationPoint.getX() - sourcePoint.getX());
 		int dy = Math.abs(destinationPoint.getY() - sourcePoint.getY());
@@ -70,136 +110,116 @@ public class Line {
 		int y1 = sourcePoint.getY();
 		int x2 = destinationPoint.getX();
 		int y2 = destinationPoint.getY();
-		if (dx >= dy) {
-			int p = 2 * dy - dx;
-			int c1 = 2 * dy;
-			int c2 = 2 * (dy - dx);
+		int x_source;
+		int y_source;
+		int x_destination;
+		int y_destination;
 
-			int x = x1;
-			int y = y1;
-			// hoán đổi 2 điểm nếu điểm sau có hoành độ lớn hơn
+		if (dx >= dy) {
+			// xác định điểm bắt đầu và điểm kết thúc
 			if (x1 > x2) {
-				x = x2;
-				y = y2;
-				x2 = x1;
-				y2 = y1;
+				x_source = x2;
+				y_source = y2;
+				x_destination = x1;
+				y_destination = y1;
+			} else {
+				x_source = x1;
+				y_source = y1;
+				x_destination = x2;
+				y_destination = y2;
 			}
-			Point point = new Point(outputImage);
-			point.setXY(x, y);
-			point.drawPixel();
-			while (x <= x2) {
-				x++;
-				if (p < 0)
-					p += c1;
-				else {
-					p += c2;
-					if (y < y2) {
-						y++;
-					} else {
-						y--;
-					}
-				}
-				point.setXY(x, y);
-				point.drawPixel();
-			}
+			bresenham(x_source, y_source, x_destination, y_destination, 0);
 
 		} else {
-			int p = 2 * dx - dy;
-			int c1 = 2 * dx;
-			int c2 = 2 * (dx - dy);
-
-			int x = x1;
-			int y = y1;
-			// hoán đổi 2 điểm nếu điểm sau có hoành độ lớn hơn
+			// xác định điểm bắt đầu và điểm kết thúc
 			if (y1 > y2) {
-				x = x2;
-				y = y2;
-				x2 = x1;
-				y2 = y1;
+				x_source = x2;
+				y_source = y2;
+				x_destination = x1;
+				y_destination = y1;
+			} else {
+				x_source = x1;
+				y_source = y1;
+				x_destination = x2;
+				y_destination = y2;
 			}
+			bresenham(y_source, x_source, y_destination, x_destination, 1);
+		}
+	}
 
-			Point point = new Point(outputImage);
-			point.setXY(x, y);
+	private void midPoint(int x_source, int y_source, int x_destination, int y_destination, int option) {
+		int dx = Math.abs(x_destination - x_source);
+		int dy = Math.abs(y_destination - y_source);
+		int p = 2 * dy - dx;
+		Point point = new Point(outputImage);
+		if (option == 0) {
+			point.setXY(x_source, y_source);
+		} else {
+			point.setXY(y_source, x_source);
+		}
+
+		point.drawPixel();
+		while (x_source <= x_destination) {
+			x_source++;
+			if (p < 0) {
+				p += 2 * dy;
+			} else {
+				y_source = (y_source < y_destination) ? (y_source + 1) : (y_source - 1);
+				p += 2 * (dy - dx);
+			}
+			if (option == 0) {
+				point.setXY(x_source, y_source);
+			} else {
+				point.setXY(y_source, x_source);
+			}
 			point.drawPixel();
-			while (y <= y2) {
-				y++;
-				if (p < 0)
-					p += c1;
-				else {
-					p += c2;
-
-					if (x < x2) {
-						x++;
-					} else {
-						x--;
-					}
-				}
-				point.setXY(x, y);
-				point.drawPixel();
-			}
-
 		}
 	}
 
 	public void midPointAlgorithm() {
+		int dx = Math.abs(destinationPoint.getX() - sourcePoint.getX());
+		int dy = Math.abs(destinationPoint.getY() - sourcePoint.getY());
 		int x1 = sourcePoint.getX();
 		int y1 = sourcePoint.getY();
 		int x2 = destinationPoint.getX();
 		int y2 = destinationPoint.getY();
+		int x_source;
+		int y_source;
+		int x_destination;
+		int y_destination;
 
-		int dx = Math.abs(x2 - x1);
-		int dy = Math.abs(y2 - y1);
-		if (dx > dy) {
-			int p = 2 * dy - dx;
-			int x = x1;
-			int y = y1;
-			if (x2 < x1) {
-				x = x2;
-				y = y2;
-				x2 = x1;
-				y2 = y1;
+		if (dx >= dy) {
+			// xác định điểm bắt đầu và điểm kết thúc
+			if (x1 > x2) {
+				x_source = x2;
+				y_source = y2;
+				x_destination = x1;
+				y_destination = y1;
+			} else {
+				x_source = x1;
+				y_source = y1;
+				x_destination = x2;
+				y_destination = y2;
 			}
-			Point point = new Point(outputImage);
-			point.setXY(x, y);
-			point.drawPixel();
-			while (x <= x2) {
-				x++;
-				if (p < 0) {
-					p += 2 * dy;
-				} else {
-					y = (y < y2) ? (y + 1) : (y - 1);
-					p += 2 * (dy - dx);
-				}
-				point.setXY(x, y);
-				point.drawPixel();
-			}
+			midPoint(x_source, y_source, x_destination, y_destination, 0);
+
 		} else {
-			int p = 2 * dx - dy;
-			int x = x1;
-			int y = y1;
-			if (y2 < y1) {
-				x = x2;
-				y = y2;
-				x2 = x1;
-				y2 = y1;
+			// xác định điểm bắt đầu và điểm kết thúc
+			if (y1 > y2) {
+				x_source = x2;
+				y_source = y2;
+				x_destination = x1;
+				y_destination = y1;
+			} else {
+				x_source = x1;
+				y_source = y1;
+				x_destination = x2;
+				y_destination = y2;
 			}
-			Point point = new Point(outputImage);
-			point.setXY(x, y);
-			point.drawPixel();
-			while (y <= y2) {
-				y++;
-				if (p < 0) {
-					p += 2 * dx;
-				} else {
-					x = (x < x2) ? (x + 1) : (x - 1);
-					p += 2 * (dx - dy);
-				}
-				point.setXY(x, y);
-				point.drawPixel();
-
-			}
+			midPoint(y_source, x_source, y_destination, x_destination, 1);
 
 		}
-
+		
+		
 	}
 }
