@@ -42,16 +42,16 @@ public class FillColor {
 			int y = tempPoint.getY();
 			if (isInArea(x, y) && getRGBValue(x, y) != color.getRGB()) {
 				tempPoint.drawPixel();
-				if (x + 1 <= MainFrame.width - 1) {
+				if (x + 1 <= MainFrame.width - 1 && isInArea(x+1, y)) {
 					myStack.push(new Point(x + 1, y));
 				}
-				if (x - 1 >= 0) {
+				if (x - 1 >= 0 && isInArea(x-1, y)) {
 					myStack.push(new Point(x - 1, y));
 				}
-				if (y + 1 <= MainFrame.height - 1) {
+				if (y + 1 <= MainFrame.height - 1 && isInArea(x, y+1)) {
 					myStack.push(new Point(x, y + 1));
 				}
-				if (y - 1 >= 0) {
+				if (y - 1 >= 0 && isInArea(x, y-1)) {
 					myStack.push(new Point(x, y - 1));
 				}
 			}
