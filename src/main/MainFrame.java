@@ -16,6 +16,8 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -41,7 +43,11 @@ public class MainFrame {
 	public BufferedImage outputImage = new BufferedImage(width, height, Image.SCALE_DEFAULT);
 	private String choosenOption = "line"; // line , circle , ellipse , polygon
 											// , fillcolor
-	JLabel mainLabel = new JLabel("");
+
+	private Graphics2D graphic2d;
+
+	public static JLabel mainLabel = new JLabel("");
+	public static JLabel newLabel = new JLabel(""); 
 	private JTextField txtXLineOfSourcePoint;
 	private JTextField txtYLineOfSourcePoint;
 	private JTextField txtXLineOfDestinationPoint;
@@ -70,12 +76,18 @@ public class MainFrame {
 	private JRadioButton radioLineMidPointAlgorithm;
 	private JRadioButton radioCircleWithBresenham;
 	private JRadioButton radioCircleMidPoint;
-	private JRadioButton radioEsclipseBresenham ; 
+	private JRadioButton radioEsclipseBresenham;
 	private JRadioButton radioEllipseMidPoint;
 	private JRadioButton radioFillColorRed;
 	private JRadioButton radioFillColorGreen;
 	private JRadioButton radioFillColorBlue;
-	private JRadioButton radioFillColorWhite ; 
+	private JRadioButton radioFillColorWhite;
+	private JRadioButton radioFillColorMoreColor ; 
+	public static JRadioButton radioFillColorSlowSpeed;
+	public static JRadioButton radioFillColorFastSpeed;
+	
+	private ColorChooser colorChooser ;
+
 	/**
 	 * Launch the application.
 	 */
@@ -101,7 +113,10 @@ public class MainFrame {
 		Image image = outputImage.getScaledInstance(outputImage.getWidth(), outputImage.getHeight(),
 				Image.SCALE_SMOOTH);
 		ImageIcon imageIcon = new ImageIcon(image);
+
 		mainLabel.setIcon(imageIcon);
+		
+		
 	}
 
 	public static void main(String[] args) {
@@ -162,26 +177,26 @@ public class MainFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				super.mouseClicked(e);
-				int x = e.getX() ; 
-				int y = e.getY() ; 
+				int x = e.getX();
+				int y = e.getY();
+
 				if (choosenOption.equals("line")) {
 					callLine(e);
-				}
-				else if (choosenOption.equals("circle")) {
+				} else if (choosenOption.equals("circle")) {
 					callCircle(x, y);
-				} 
-				else if(choosenOption.equals("ellipse")) {
+				} else if (choosenOption.equals("ellipse")) {
 					callEllipseClass(x, y);
-				}
-				else if (choosenOption.equals("polygon")) {
-				
+				} else if (choosenOption.equals("polygon")) {
+
 					callPolygonClass(e);
 				} else if (choosenOption.equals("fillcolor")) {
 					callFillColorClass(e.getX(), e.getY());
 				}
 
 			}
+
 		});
+
 		mainPanel.add(mainLabel);
 
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -200,6 +215,70 @@ public class MainFrame {
 			public void ancestorRemoved(AncestorEvent arg0) {
 			}
 		});
+
+		JPanel panel_5 = new JPanel();
+		tabbedPane.addTab("Home", null, panel_5, null);
+		panel_5.setLayout(null);
+
+		JButton btnLineDrawing = new JButton("");
+		btnLineDrawing.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				choosenOption = "line";
+			}
+		});
+		btnLineDrawing.setIcon(new ImageIcon("src\\main\\color-icon\\line.png"));
+		btnLineDrawing.setBounds(22, 11, 80, 80);
+		panel_5.add(btnLineDrawing);
+
+		JButton btnCircleDrawing = new JButton("");
+		btnCircleDrawing.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				choosenOption = "circle";
+			}
+		});
+		btnCircleDrawing.setIcon(new ImageIcon("src\\main\\color-icon\\circle.png"));
+		btnCircleDrawing.setBounds(118, 11, 80, 80);
+		panel_5.add(btnCircleDrawing);
+
+		JButton btnEllipse = new JButton("");
+		btnEllipse.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				choosenOption = "ellipse";
+			}
+		});
+		btnEllipse.setIcon(new ImageIcon("src\\main\\color-icon\\ellipse.png"));
+		btnEllipse.setBounds(208, 11, 80, 80);
+		panel_5.add(btnEllipse);
+
+		JButton btnPolygonDrawing = new JButton("");
+		btnPolygonDrawing.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				choosenOption = "polygon";
+			}
+		});
+		btnPolygonDrawing.setIcon(new ImageIcon("src\\main\\color-icon\\polygon.png"));
+		btnPolygonDrawing.setBounds(300, 11, 80, 80);
+		panel_5.add(btnPolygonDrawing);
+
+		JButton btnFillColor = new JButton("");
+		btnFillColor.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				choosenOption = "fillcolor";
+			}
+		});
+		btnFillColor.setIcon(new ImageIcon("src\\main\\color-icon\\paint-bucket.png"));
+		btnFillColor.setBounds(393, 11, 80, 80);
+		panel_5.add(btnFillColor);
+
+		JButton button = new JButton("");
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				drawAxis();
+			}
+		});
+		button.setIcon(new ImageIcon("src\\main\\color-icon\\matrix.png"));
+		button.setBounds(477, 11, 80, 80);
+		panel_5.add(button);
 
 		tabbedPane.addTab("Line", null, panel, null);
 		panel.setLayout(null);
@@ -414,9 +493,9 @@ public class MainFrame {
 		panel_1.add(lblRadius);
 
 		txtCircleRadius = new JTextField();
-		txtCircleRadius.setText("20");
+		txtCircleRadius.setText("50");
 		txtCircleRadius.setColumns(10);
-		txtCircleRadius.setBounds(149, 45, 86, 20);
+		txtCircleRadius.setBounds(149, 45, 86, 21);
 		panel_1.add(txtCircleRadius);
 
 		JPanel panel_2 = new JPanel();
@@ -477,13 +556,13 @@ public class MainFrame {
 		panel_2.add(lblB);
 
 		txtEllipseAValue = new JTextField();
-		txtEllipseAValue.setText("50");
+		txtEllipseAValue.setText("100");
 		txtEllipseAValue.setColumns(10);
 		txtEllipseAValue.setBounds(191, 36, 86, 20);
 		panel_2.add(txtEllipseAValue);
 
 		txtEllipseBValue = new JTextField();
-		txtEllipseBValue.setText("100");
+		txtEllipseBValue.setText("50");
 		txtEllipseBValue.setColumns(10);
 		txtEllipseBValue.setBounds(191, 67, 86, 20);
 		panel_2.add(txtEllipseBValue);
@@ -605,35 +684,69 @@ public class MainFrame {
 		buttonGroup_Color.add(radioFillColorBlue);
 		radioFillColorBlue.setBounds(170, 43, 20, 23);
 		panel_4.add(radioFillColorBlue);
-		
+
 		JLabel lblRedColor = new JLabel("");
 		lblRedColor.setIcon(new ImageIcon("src\\main\\color-icon\\red.jpg"));
 		lblRedColor.setBounds(90, 45, 20, 20);
 		lblRedColor.setBorder(BorderFactory.createLineBorder(Color.red));
 		panel_4.add(lblRedColor);
-		
+
 		JLabel lblGreenColor = new JLabel("");
 		lblGreenColor.setIcon(new ImageIcon("src\\main\\color-icon\\green.jpg"));
 		lblGreenColor.setBounds(140, 45, 20, 20);
 		lblGreenColor.setBorder(BorderFactory.createLineBorder(Color.green));
 		panel_4.add(lblGreenColor);
-		
+
 		JLabel lblBlueColor = new JLabel("");
 		lblBlueColor.setIcon(new ImageIcon("src\\main\\color-icon\\blue.jpg"));
 		lblBlueColor.setBounds(190, 45, 20, 20);
 		lblBlueColor.setBorder(BorderFactory.createLineBorder(Color.blue));
 		panel_4.add(lblBlueColor);
-		
+
 		radioFillColorWhite = new JRadioButton("");
 		buttonGroup_Color.add(radioFillColorWhite);
 		radioFillColorWhite.setBounds(220, 43, 20, 23);
 		panel_4.add(radioFillColorWhite);
-		
+
 		JLabel lblWhiteColor = new JLabel("");
 		lblWhiteColor.setBorder(BorderFactory.createLineBorder(Color.WHITE));
 		lblWhiteColor.setIcon(new ImageIcon("src\\main\\color-icon\\white.jpg"));
 		lblWhiteColor.setBounds(240, 45, 20, 20);
 		panel_4.add(lblWhiteColor);
+
+		radioFillColorSlowSpeed = new JRadioButton("Slow");
+		buttonGroupFillColorSpeed.add(radioFillColorSlowSpeed);
+		radioFillColorSlowSpeed.setFont(new Font("Arial", Font.PLAIN, 14));
+		radioFillColorSlowSpeed.setBounds(407, 15, 81, 23);
+		panel_4.add(radioFillColorSlowSpeed);
+
+		radioFillColorFastSpeed = new JRadioButton("Fast");
+		radioFillColorFastSpeed.setSelected(true);
+		buttonGroupFillColorSpeed.add(radioFillColorFastSpeed);
+		radioFillColorFastSpeed.setFont(new Font("Arial", Font.PLAIN, 14));
+		radioFillColorFastSpeed.setBounds(342, 15, 53, 23);
+		panel_4.add(radioFillColorFastSpeed);
+
+		JLabel lblSpeed = new JLabel("Speed:");
+		lblSpeed.setFont(new Font("Tahoma", Font.PLAIN, 14));
+		lblSpeed.setBounds(286, 11, 53, 28);
+		panel_4.add(lblSpeed);
+		
+		JButton btnMoreColor = new JButton("More Color");
+		btnMoreColor.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				colorChooser = new ColorChooser() ; 
+				radioFillColorMoreColor.setSelected(true); ;
+			}
+		});
+		btnMoreColor.setBounds(296, 43, 99, 23);
+		panel_4.add(btnMoreColor);
+		
+		radioFillColorMoreColor = new JRadioButton("");
+		radioFillColorMoreColor.setEnabled(false);
+		buttonGroup_Color.add(radioFillColorMoreColor);
+		radioFillColorMoreColor.setBounds(266, 43, 28, 23);
+		panel_4.add(radioFillColorMoreColor);
 
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.setBounds(0, 0, 980, 21);
@@ -648,6 +761,35 @@ public class MainFrame {
 				createNewImage();
 			}
 		});
+
+		JMenuItem mntmOpen = new JMenuItem("Open");
+		mntmOpen.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+
+				JFileChooser chooser = new JFileChooser();
+				chooser.setDialogTitle("Open Image:");
+				// TypeFillter là lớp mình tạo ra để lọc các file ảnh
+				chooser.setFileFilter(new TypeFillter());
+				chooser.showOpenDialog(null);
+				String location;
+				if (chooser.getSelectedFile() != null) {
+					File file = chooser.getSelectedFile();
+					location = file.getAbsolutePath();
+					try {
+						outputImage = ImageIO.read(new File(location));
+					} catch (IOException ex) {
+					}
+					width = outputImage.getWidth();
+					height = outputImage.getHeight();
+					Image image = outputImage.getScaledInstance(width, height, Image.SCALE_AREA_AVERAGING);
+					ImageIcon icon = new ImageIcon(image);
+					mainLabel.setIcon(icon);
+
+				}
+
+			}
+		});
+		mnFile.add(mntmOpen);
 		mnFile.add(mntmNew);
 
 		JMenuItem mntmSave = new JMenuItem("Save");
@@ -675,6 +817,20 @@ public class MainFrame {
 			}
 		});
 		mnFile.add(mntmSave);
+		
+		JPanel panel_6 = new JPanel();
+		panel_6.setBounds(703, 160, 179, 178);
+		frame.getContentPane().add(panel_6);
+		GroupLayout gl_panel_6 = new GroupLayout(panel_6);
+		gl_panel_6.setHorizontalGroup(
+			gl_panel_6.createParallelGroup(Alignment.LEADING)
+				.addGap(0, 179, Short.MAX_VALUE)
+		);
+		gl_panel_6.setVerticalGroup(
+			gl_panel_6.createParallelGroup(Alignment.LEADING)
+				.addGap(0, 178, Short.MAX_VALUE)
+		);
+		panel_6.setLayout(gl_panel_6);
 	}
 
 	/*
@@ -698,42 +854,73 @@ public class MainFrame {
 	}
 
 	public void createNewImage() {
-		Graphics2D graphic2d = outputImage.createGraphics();
+		graphic2d = outputImage.createGraphics();
 		graphic2d.setColor(new Color(255, 255, 250));
 		graphic2d.fillRect(0, 0, width, height);
-		Point point = new Point(outputImage);
-		// draw line every 10 px
-		point.setColor(lineColor);
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				if (i % 10 == 0 || j % 10 == 0) {
-					point.setXY(i, j);
-					point.drawPixel();
-				}
-				// vẽ đường biên
-				if (i == 0 || j == 0 || i == width - 1 || j == height - 1) {
-					point.setColor(drawColor);
-					point.setXY(i, j);
-					point.drawPixel();
-					point.setColor(lineColor);
-				}
-			}
-		}
-		// draw axis Oxy
-		point.setColor(axisColor);
-		for (int i = 0; i < height; i++) {
-			point.setXY(width / 2, i);
-			point.drawPixel();
-		}
-		for (int j = 0; j < width; j++) {
-			point.setXY(j, height / 2);
-			point.drawPixel();
-		}
-		loadImageToLabel();
+		drawAxis();
 
 	}
 
+	private void drawAxis() {
+		Point point = new Point(outputImage);
+		point.setColor(lineColor);
+		// draw line every 10 px along the width
+		for (int x = width / 2; x >= 0; x = x - 10) {
+			for (int y = 0; y < height; y++) {
+				if (outputImage.getRGB(x, y) != drawColor.getRGB()) { // don't over draw in drawing line
+					point.setXY(x, y);
+					point.drawPixel();
+				}
+			}
+		}
+
+		for (int x = width / 2; x < width; x = x + 10) {
+			for (int y = 0; y < height; y++) {
+				if (outputImage.getRGB(x, y) != drawColor.getRGB()) {
+					point.setXY(x, y);
+					point.drawPixel();
+				}
+			}
+		}
+
+		// draw line every 10 px along the height
+		for (int y = height / 2; y >= 0; y = y - 10) {
+			for (int x = 0; x < width; x++) {
+				if (outputImage.getRGB(x, y) != drawColor.getRGB()) {
+					point.setXY(x, y);
+					point.drawPixel();
+				}
+			}
+		}
+		for (int y = height / 2; y < height; y = y + 10) {
+			for (int x = 0; x < width; x++) {
+				if (outputImage.getRGB(x, y) != drawColor.getRGB()) {
+					point.setXY(x, y);
+					point.drawPixel();
+				}
+			}
+		}
+
+		// draw Ox axis
+		point.setColor(axisColor);
+		for (int i = 0; i < height; i++) {
+			if (outputImage.getRGB(width / 2, i) != drawColor.getRGB()) {
+				point.setXY(width / 2, i);
+				point.drawPixel();
+			}
+		}
+		// draw Oy axis
+		for (int j = 0; j < width; j++) {
+			if (outputImage.getRGB(j, height / 2) != drawColor.getRGB()) {
+				point.setXY(j, height / 2);
+				point.drawPixel();
+			}
+		}
+		loadImageToLabel();
+	}
+
 	Point sourcePointOfLine;
+	private final ButtonGroup buttonGroupFillColorSpeed = new ButtonGroup();
 
 	private void callLine(MouseEvent e) {
 		Point destinationPoint;
@@ -780,15 +967,16 @@ public class MainFrame {
 			circle.midPointAlgorithm();
 			loadImageToLabel();
 		}
-		txtCircleXValue.setText(String.valueOf( changeXFromDeviceToReal(x)));
-		txtCircleYValue.setText(String.valueOf( changeYFromDeviceToReal(y)));
+		txtCircleXValue.setText(String.valueOf(changeXFromDeviceToReal(x)));
+		txtCircleYValue.setText(String.valueOf(changeYFromDeviceToReal(y)));
 
 	}
+
 	private void callEllipseClass(int x, int y) {
 		Point centralPoint = new Point(x, y, outputImage);
 		int a = Integer.parseInt(txtEllipseAValue.getText());
 		int b = Integer.parseInt(txtEllipseBValue.getText());
-		Ellipse ellipse = new Ellipse(centralPoint, a,b, outputImage);
+		Ellipse ellipse = new Ellipse(centralPoint, a, b, outputImage);
 
 		if (radioEsclipseBresenham.isSelected()) {
 			ellipse.bresenham();
@@ -797,9 +985,10 @@ public class MainFrame {
 			ellipse.midPointAlgorithm();
 			loadImageToLabel();
 		}
-		txtEllipseXValue.setText(String.valueOf( changeXFromDeviceToReal(x)));
-		txtEllipseYValue.setText(String.valueOf( changeYFromDeviceToReal(y)));
+		txtEllipseXValue.setText(String.valueOf(changeXFromDeviceToReal(x)));
+		txtEllipseYValue.setText(String.valueOf(changeYFromDeviceToReal(y)));
 	}
+
 	private void callPolygonClass(MouseEvent e) {
 		// left click with mouse
 		if (e.getButton() == MouseEvent.BUTTON1) {
@@ -833,19 +1022,34 @@ public class MainFrame {
 	private void callFillColorClass(int x, int y) {
 		Point startPoint = new Point(x, y);
 		Color color = new Color(255, 0, 0);
+		
 		if (radioFillColorRed.isSelected()) {
 			color = new Color(255, 0, 0);
-		}
-		else if (radioFillColorGreen.isSelected()) {
+		} else if (radioFillColorGreen.isSelected()) {
 			color = new Color(0, 255, 0);
-		}
-		else if (radioFillColorBlue.isSelected()) {
+		} else if (radioFillColorBlue.isSelected()) {
 			color = new Color(0, 0, 255);
-		}else if( radioFillColorWhite.isSelected() ) {
+		} else if (radioFillColorWhite.isSelected()) {
 			color = new Color(255, 255, 255);
+		} else if(colorChooser !=null) {
+			color = colorChooser.getFillColor() ; 
+		}  
+		
+		if (radioFillColorFastSpeed.isSelected()) {
+			FillColor fillColor = new FillColor(startPoint, outputImage, color);
+			fillColor.oilSpillWithStack();
+			loadImageToLabel();
+
+		} else {
+			FillColorThread colorThread = new FillColorThread(startPoint, outputImage, color);
+			colorThread.start();
+
 		}
-		FillColor fillColor = new FillColor(startPoint, outputImage, color);
-		fillColor.oilSpillWithStack();
+
+	}
+
+	public void updateIcon(BufferedImage image) {
+		outputImage = image;
 		loadImageToLabel();
 
 	}

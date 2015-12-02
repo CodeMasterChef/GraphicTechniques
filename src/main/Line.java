@@ -7,6 +7,9 @@ public class Line {
 	Point destinationPoint;
 	BufferedImage outputImage;
 
+	public Line() { 
+		
+	}
 	public Line(BufferedImage outputImage) {
 		this.outputImage = outputImage;
 	}

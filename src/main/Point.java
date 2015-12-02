@@ -21,7 +21,9 @@ public class Point {
 	public Point() {
 		
 	}
-	
+	public Point(Color c) {
+		this.color = c ;
+	}
 
 	public Point(int x, int y, BufferedImage outputImage) {
 		super();
